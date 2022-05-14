@@ -1,4 +1,5 @@
 # BaseRL
- Some basic RL algorithms
-
-Python 3.7 + torch 1.7
+ Some basic RL algorithms with simple gym environment.
+## requirements
+- Python 3.7
+- PyTorch 1.7
