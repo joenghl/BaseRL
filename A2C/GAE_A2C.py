@@ -100,29 +100,21 @@ class A2C:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--lr",             default=1e-3,           type=float,
-                        help="AC learning rate")
-    parser.add_argument("--hidden",         default=32,             type=int,
-                        help="hidden size for actor and cirtic network")
-    parser.add_argument("--num_episode",    default=10000,          type=int,
-                        help="episode for training")
-    parser.add_argument("--gamma",          default=0.9,            type=float,
-                        help="reward decay rate")
-    parser.add_argument("--batch_size",     default=32,             type=int,
-                        help="episodes per log")
-    parser.add_argument("--log_freq",       default=20,             type=int,
-                        help="episodes per log")
-    parser.add_argument("--n_step",         default=5,              type=int,
-                        help="n_step A2C")
-    parser.add_argument("--capacity",       default=10000,          type=int,
-                        help="buffer capacity")
-    parser.add_argument("--lam",            default=0.8,            type=float,
-                        help="GAE lambda")
-    parser.add_argument("--train_freq",     default=5,              type=int,
-                        help="train_freq")
-    config = parser.parse_args()
-    wandb.init(project="A2C_Lunar", config=config, name="GAE")
-    args = wandb.config
+    parser.add_argument("--lr",             default=1e-3,           type=float)
+    parser.add_argument("--hidden",         default=32,             type=int)
+    parser.add_argument("--num_episode",    default=10000,          type=int)
+    parser.add_argument("--gamma",          default=0.9,            type=float)
+    parser.add_argument("--batch_size",     default=32,             type=int)
+    parser.add_argument("--log_freq",       default=20,             type=int)
+    parser.add_argument("--n_step",         default=5,              type=int)
+    parser.add_argument("--capacity",       default=10000,          type=int)
+    parser.add_argument("--lam",            default=0.8,            type=float)
+    parser.add_argument("--train_freq",     default=5,              type=int)
+    parser.add_argument("--wandb_log",      default=False,          type=bool)
+    args = parser.parse_args()
+    if args.wandb_log:
+        wandb.init(project="A2C_Lunar", config=args, name="GAE")
+        args = wandb.config
     Transition = namedtuple(
         "Transition",
         (
@@ -155,6 +147,7 @@ if __name__ == "__main__":
             episode_reward += reward
         agent.train()
         agent.buffer.clean()
-        wandb.log({"reward": episode_reward}, step=i_episode)
+        if args.wandb_log:
+            wandb.log({"reward": episode_reward}, step=i_episode)
         if i_episode % args.log_freq == 0:
             print("Episode: %d, Reward: %f" % (i_episode, episode_reward))

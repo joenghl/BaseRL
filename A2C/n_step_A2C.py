@@ -91,25 +91,19 @@ class A2C:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--lr",             default=1e-3,           type=float,
-                        help="AC learning rate")
-    parser.add_argument("--hidden",         default=32,             type=int,
-                        help="hidden size for actor and cirtic network")
-    parser.add_argument("--num_episode",    default=10000,           type=int,
-                        help="episode for training")
-    parser.add_argument("--gamma",          default=0.9,            type=float,
-                        help="reward decay rate")
-    parser.add_argument("--batch_size",     default=32,             type=int,
-                        help="episodes per log")
-    parser.add_argument("--log_freq",       default=20,             type=int,
-                        help="episodes per log")
-    parser.add_argument("--n_step",         default=10,              type=int,
-                        help="n_step A2C")
-    parser.add_argument("--capacity",       default=10000,          type=int,
-                        help="buffer capacity")
-    config = parser.parse_args()
-    wandb.init(project="A2C", config=config, name="n=10")
-    args = wandb.config
+    parser.add_argument("--lr",             default=1e-3,           type=float)
+    parser.add_argument("--hidden",         default=32,             type=int)
+    parser.add_argument("--num_episode",    default=10000,          type=int)
+    parser.add_argument("--gamma",          default=0.9,            type=float)
+    parser.add_argument("--batch_size",     default=32,             type=int)
+    parser.add_argument("--log_freq",       default=20,             type=int)
+    parser.add_argument("--n_step",         default=10,             type=int)
+    parser.add_argument("--capacity",       default=10000,          type=int)
+    parser.add_argument("--wandb_log",      default=False,          type=bool)
+    args = parser.parse_args()
+    if args.wandb_log:
+        wandb.init(project="A2C", config=args, name="n=10")
+        args = wandb.config
     Transition = namedtuple(
         "Transition",
         (
@@ -144,7 +138,7 @@ if __name__ == "__main__":
                 step = 0
                 agent.train()
                 agent.buffer.clean()
-        if global_step % args.n_step == 0:
+        if global_step % args.n_step == 0 and args.wandb_log:
             wandb.log({"reward": episode_reward}, step=i_episode)
         if i_episode % args.log_freq == 0:
             print("Episode: %d, Reward: %f" % (i_episode, episode_reward))
