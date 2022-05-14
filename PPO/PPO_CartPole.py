@@ -100,7 +100,6 @@ class PPO:
             self.update_actor(s, a, adv, old_log_prob)
             self.update_critic(s, target)
             
-
     def update_actor(self, state, action, adv, old_log_prob):
         # cal actor loss
         prob = self.actor(state)
@@ -162,7 +161,7 @@ if __name__ =="__main__":
     parser.add_argument("--capacity",   default=10000,      type=int)
     parser.add_argument("--n_update",   default=10,         type=int)
     parser.add_argument("--lam",        default=0.8,        type=float)
-    parser.add_argument("--wandb_log",      default=False,      type=bool)
+    parser.add_argument("--wandb_log",  default=False,      type=bool)
     args = parser.parse_args()
     if args.wandb_log:
         wandb.init(project="PPO_CartPole", config=args, name="PPO_GAE")

@@ -87,7 +87,8 @@ def main():
             episode_reward += reward
         agent.train()
         agent.buffer.clean()
-        wandb.log({"Reward": episode_reward}, step=i_episode)
+        if args.wandb_log:
+            wandb.log({"Reward": episode_reward}, step=i_episode)
         if i_episode % args.log_freq == 0:
             print(f"Episode: {i_episode}, Reward: {episode_reward}")
         
@@ -100,7 +101,9 @@ if __name__ == "__main__":
     parser.add_argument("--gamma",          default=0.99,       type=float)
     parser.add_argument("--log_freq",       default=20,         type=int)
     parser.add_argument("--capacity",       default=10000,      type=int)
-    config = parser.parse_args()
-    wandb.init(project="PG", config=config, name="REINFORCE_CartPole")
-    args = wandb.config
+    parser.add_argument("--wandb_log",      default=False,      type=bool)
+    args = parser.parse_args()
+    if args.wandb_log:
+        wandb.init(project="PG", config=args, name="REINFORCE_CartPole")
+        args = wandb.config
     main()
