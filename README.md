@@ -3,3 +3,5 @@
 ## requirements
 - Python 3.7
 - PyTorch 1.7
+- Gym
+- wandb (Optional)
