@@ -4,5 +4,3 @@
 - Python 3.7
 - PyTorch 1.7
 - Gym
-- 1
-- 2
