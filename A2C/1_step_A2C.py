@@ -1,5 +1,5 @@
 """
-1-step A2C
+1-step A2C (old release)
 """
 import gym
 import argparse
