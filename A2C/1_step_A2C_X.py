@@ -1,3 +1,7 @@
+"""
+1-step A2C (new release)
+"""
+
 import gym
 import argparse
 import wandb
