@@ -92,12 +92,13 @@ def main():
     a_dim = env.action_space.n
     agent = DQN(env, o_dim, args.hidden, a_dim) 
     for i_episode in range(args.n_episodes):
-        obs = env.reset()
+        obs, info = env.reset()
         episode_reward = 0
         done = False
         while not done:
             action = agent.choose_action(obs)
-            next_obs, reward, done, info = env.step(action) 
+            next_obs, reward, terminated, truncated, info = env.step(action)
+            done = terminated or truncated
             agent.store_transition(obs, action, reward, next_obs, done)
             episode_reward += reward
             obs = next_obs
@@ -110,19 +111,19 @@ def main():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--env",        default="CartPole-v0",  type=str)
-    parser.add_argument("--lr",             default=1e-3,       type=float)
-    parser.add_argument("--hidden",         default=64,         type=int)
-    parser.add_argument("--n_episodes",     default=2000,       type=int)
-    parser.add_argument("--gamma",          default=0.99,       type=float)
-    parser.add_argument("--log_freq",       default=100,        type=int)
-    parser.add_argument("--capacity",       default=10000,      type=int)
-    parser.add_argument("--eps",            default=1.0,        type=float)
-    parser.add_argument("--eps_min",        default=0.05,       type=float)
-    parser.add_argument("--batch_size",     default=128,        type=int)
-    parser.add_argument("--eps_decay",      default=0.999,      type=float)
-    parser.add_argument("--update_target",  default=100,        type=int)
-    parser.add_argument("--wandb_log",      default=False,      type=bool)
+    parser.add_argument("--env",            default="CartPole-v0",  type=str)
+    parser.add_argument("--lr",             default=1e-3,           type=float)
+    parser.add_argument("--hidden",         default=64,             type=int)
+    parser.add_argument("--n_episodes",     default=2000,           type=int)
+    parser.add_argument("--gamma",          default=0.99,           type=float)
+    parser.add_argument("--log_freq",       default=100,            type=int)
+    parser.add_argument("--capacity",       default=10000,          type=int)
+    parser.add_argument("--eps",            default=1.0,            type=float)
+    parser.add_argument("--eps_min",        default=0.05,           type=float)
+    parser.add_argument("--batch_size",     default=128,            type=int)
+    parser.add_argument("--eps_decay",      default=0.999,          type=float)
+    parser.add_argument("--update_target",  default=100,            type=int)
+    parser.add_argument("--wandb_log",      action="store_true")
     args = parser.parse_args()
     if args.wandb_log:
         wandb.init(project="DQN_CartPole", config=args, name="DQN")
