@@ -13,7 +13,7 @@ import torch.nn.functional as F
 class SharedLayer(nn.Module):
     def __init__(self, input_dim, hidden):
         super(SharedLayer, self).__init__()
-        self.fc1= nn.Linear(input_dim, hidden)
+        self.fc1 = nn.Linear(input_dim, hidden)
 
     def forward(self, x):
         out = F.relu(self.fc1(x))
@@ -50,6 +50,7 @@ def choose_action(prob, action_dim):
     action = np.random.choice(a=action_dim, p=prob[0].detach().numpy())
     return action
 
+
 def train_critic(critic_optim, critic, sample):
     obs, one_hot_action, log_probs, reward, next_obs = sample
     obs_v = critic(obs)
@@ -60,12 +61,13 @@ def train_critic(critic_optim, critic, sample):
     critic_loss.backward()
     critic_optim.step()
 
+
 def train_actor(actor_optim, critic, sample):
     obs, one_hot_action, log_probs, reward, next_obs = sample
     obs_v = critic(obs)
     next_obs_v = critic(next_obs)
     advantage = reward + next_obs_v.detach() - obs_v.detach()
-    one_hot_action = torch.tensor(one_hot_action).unsqueeze(0)
+    one_hot_action = one_hot_action.clone().unsqueeze(0)
     # -A*log(pi(a|s))
     actor_loss = -advantage * torch.sum(log_probs * one_hot_action, dim=-1)
     actor_optim.zero_grad()
@@ -88,7 +90,7 @@ def main():
     reward_list = []
 
     for i in range(args.episode):
-        obs = env.reset()
+        obs, info = env.reset()
         done = False
         step = 0
         episode_reward = 0
@@ -100,7 +102,8 @@ def main():
             probs = torch.exp(log_probs)
             action = choose_action(probs, action_dim)
             one_hot_action = torch.eye(action_dim)[action].unsqueeze(dim=0)
-            next_obs, reward, done, info = env.step(action)
+            next_obs, reward, terminated, truncated, info = env.step(action)
+            done = terminated or truncated
             if done:
                 reward = -10.0
             episode_reward += reward
@@ -110,11 +113,13 @@ def main():
             train_critic(critic_optim, critic, sample)
             train_actor(actor_optim, critic, sample)
             obs = next_obs
-        wandb.log({"reward": episode_reward})
+        if args.wandb_log:
+            wandb.log({"reward": episode_reward})
         reward_list.append(episode_reward)
         if i % args.log_freq == 0:
             print("Episode:%d , reward: %f" % (i, episode_reward))
     env.close()
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -126,7 +131,7 @@ if __name__ == "__main__":
     parser.add_argument("--gamma",          default=0.9,        type=float)
     parser.add_argument("--batch_size",     default=50,         type=int)
     parser.add_argument("--log_freq",       default=50,         type=int)
-    parser.add_argument("--wandb_log",      default=False,      type=bool)
+    parser.add_argument("--wandb_log",      action='store_true')
     args = parser.parse_args()
     if args.wandb_log:
         wandb.init(project="A2C", config=args)

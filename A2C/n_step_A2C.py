@@ -1,3 +1,7 @@
+"""
+n-steps A2C algorithms
+"""
+
 import gym
 import argparse
 import numpy as np
@@ -7,6 +11,7 @@ from torch import Tensor
 import torch.nn as nn
 import torch.nn.functional as F
 from collections import namedtuple
+
 
 class Net(nn.Module):
     def __init__(self, input_size, hidden_size, output_size):
@@ -68,11 +73,11 @@ class A2C:
     def train(self):
         sample = self.buffer.memory
         batch = Transition(*zip(*sample))
-        obs_batch = Tensor(batch.obs)  # (5,4)
+        obs_batch = Tensor(np.array(batch.obs))  # (5,4)
         action_batch = Tensor(batch.action)  # (5)
         log_pi_batch = batch.log_pi  # (5)
         reward_batch = Tensor(batch.reward)  # (5)
-        next_obs_batch = Tensor(batch.next_obs)  # (5,4)
+        next_obs_batch = Tensor(np.array(batch.next_obs))  # (5,4)
         done_batch = Tensor(batch.done)  # (5)
 
         # n-step bootstrapping
@@ -99,7 +104,7 @@ if __name__ == "__main__":
     parser.add_argument("--log_freq",       default=20,             type=int)
     parser.add_argument("--n_step",         default=10,             type=int)
     parser.add_argument("--capacity",       default=10000,          type=int)
-    parser.add_argument("--wandb_log",      default=False,          type=bool)
+    parser.add_argument("--wandb_log",      action="store_true")
     args = parser.parse_args()
     if args.wandb_log:
         wandb.init(project="A2C", config=args, name="n=10")
@@ -118,7 +123,7 @@ if __name__ == "__main__":
     global_step = 0
     
     for i_episode in range(args.num_episode):
-        obs = env.reset()
+        obs, info = env.reset()
         done = False
         step = 0
         episode_reward = 0
@@ -127,7 +132,8 @@ if __name__ == "__main__":
             step += 1
             prob, log_prob = agent.actor(obs)
             action = int(prob.multinomial(1))
-            next_obs, reward, done, info = env.step(action)
+            next_obs, reward, terminated, truncated, info = env.step(action)
+            done = terminated or truncated
             log_pi = log_prob[action]
             if done:
                 reward = -20.0

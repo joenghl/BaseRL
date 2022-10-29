@@ -17,7 +17,7 @@ class Actor(nn.Module):
     def forward(self, x):
         x = Tensor(x)
         x = F.relu(self.fc1(x))
-        prob = F.softmax(self.fc2(x))
+        prob = F.softmax(self.fc2(x), dim=-1)
         return prob
 
 
@@ -85,6 +85,7 @@ class PPO:
 
         # cal target using old critic
         with torch.no_grad():
+            s_ = np.array(s_)
             target = r + args.gamma * self.critic(s_) * (1 - done)
             delta = target - self.critic(s)
             delta = delta.numpy()
@@ -132,12 +133,13 @@ def main():
     agent = PPO(n_state, n_action)
 
     for i_episode in range(args.n_episodes):
-        s = env.reset()
+        s, _ = env.reset()
         total_reward = 0
         done = False
         while not done:
             a, prob = agent.choose_action(s)
-            s_, r, done, _ = env.step(a)
+            s_, r, terminated, truncated, _ = env.step(a)
+            done = terminated or truncated
             agent.store_transition(s, a, r, s_, done, prob)
             s = s_
             total_reward += r
@@ -150,7 +152,7 @@ def main():
         agent.buffer.clean()
 
 
-if __name__ =="__main__":
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--n_episodes", default=3000,       type=int)
     parser.add_argument("--a_lr",       default=1e-3,       type=float)
@@ -161,7 +163,7 @@ if __name__ =="__main__":
     parser.add_argument("--capacity",   default=10000,      type=int)
     parser.add_argument("--n_update",   default=10,         type=int)
     parser.add_argument("--lam",        default=0.8,        type=float)
-    parser.add_argument("--wandb_log",  default=False,      type=bool)
+    parser.add_argument("--wandb_log",  action="store_true")
     args = parser.parse_args()
     if args.wandb_log:
         wandb.init(project="PPO_CartPole", config=args, name="PPO_GAE")

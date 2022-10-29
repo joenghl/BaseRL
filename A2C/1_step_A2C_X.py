@@ -6,6 +6,7 @@ import gym
 import argparse
 import wandb
 import torch
+import numpy as np
 from torch import Tensor
 import torch.nn as nn
 import torch.nn.functional as F
@@ -72,14 +73,15 @@ class A2C:
     def train(self):
         sample = self.buffer.memory
         batch = Transition(*zip(*sample))
-        obs_batch = Tensor(batch.obs)  # (5,4)
+        obs_batch = Tensor(np.array(batch.obs))  # (5,4)
         log_pi_batch = torch.stack(batch.log_pi)  # (5)
         reward_batch = Tensor(batch.reward)  # (5)
-        next_obs_batch = Tensor(batch.next_obs)  # (5,4)
+        next_obs_batch = Tensor(np.array(batch.next_obs))  # (5,4)
         done_batch = Tensor(batch.done)  # (5)
 
         # 1-step bootstrapping
-        batch_adv = reward_batch + args.gamma * agent.critic(next_obs_batch).squeeze().detach() * (1 - done_batch) - agent.critic(obs_batch).squeeze()
+        batch_adv = reward_batch + args.gamma * agent.critic(next_obs_batch).squeeze().detach() * (
+                    1 - done_batch) - agent.critic(obs_batch).squeeze()
         loss = -batch_adv.detach() * log_pi_batch + batch_adv**2
         self.optim.zero_grad()
         loss.mean().backward()
@@ -115,7 +117,7 @@ if __name__ == "__main__":
     global_step = 0
     
     for i_episode in range(args.num_episode):
-        obs = env.reset()
+        obs, info = env.reset()
         done = False
         step = 0
         episode_reward = 0
@@ -124,7 +126,8 @@ if __name__ == "__main__":
             step += 1
             prob, log_prob = agent.actor(obs)
             action = int(prob.multinomial(1))
-            next_obs, reward, done, info = env.step(action)
+            next_obs, reward, terminated, truncated, info = env.step(action)
+            done = terminated or truncated
             log_pi = log_prob[action]
             if done:
                 reward = -20.0

@@ -111,7 +111,7 @@ def main():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--env",            default="CartPole-v0",  type=str)
+    parser.add_argument("--env",            default="CartPole-v1",  type=str)
     parser.add_argument("--lr",             default=1e-3,           type=float)
     parser.add_argument("--hidden",         default=64,             type=int)
     parser.add_argument("--n_episodes",     default=2000,           type=int)

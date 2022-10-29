@@ -1,3 +1,7 @@
+"""
+REINFORCE (Policy Gradient) algorithm
+"""
+
 import gym
 import argparse
 import numpy as np
@@ -76,12 +80,13 @@ def main():
     a_dim = env.action_space.n
     agent = PG(o_dim, args.hidden, a_dim)
     for i_episode in range(args.n_episodes):
-        obs = env.reset()
+        obs, info = env.reset()
         episode_reward = 0
         done = False
         while not done:
             action, log_prob = agent.act(obs)
-            next_obs, reward, done, info = env.step(action)
+            next_obs, reward, terminated, truncated, info = env.step(action)
+            done = terminated or truncated
             agent.push(log_prob, reward)
             obs = next_obs
             episode_reward += reward
@@ -101,7 +106,7 @@ if __name__ == "__main__":
     parser.add_argument("--gamma",          default=0.99,       type=float)
     parser.add_argument("--log_freq",       default=20,         type=int)
     parser.add_argument("--capacity",       default=10000,      type=int)
-    parser.add_argument("--wandb_log",      default=False,      type=bool)
+    parser.add_argument("--wandb_log",      action="store_true")
     args = parser.parse_args()
     if args.wandb_log:
         wandb.init(project="PG", config=args, name="REINFORCE_CartPole")
