@@ -98,7 +98,7 @@ class PPO:
             adv_list = Tensor(adv_list)
 
         for _ in range(args.n_update):
-            self.update_actor(s, a, adv, old_log_prob)
+            self.update_actor(s, a, adv_list, old_log_prob)
             self.update_critic(s, target)
             
     def update_actor(self, state, action, adv, old_log_prob):
