@@ -95,7 +95,7 @@ class PPO:
                 adv = args.gamma * args.lam * adv + delta_t
                 adv_list.append(adv)
             adv_list.reverse()
-            adv = Tensor(adv)
+            adv_list = Tensor(adv_list)
 
         for _ in range(args.n_update):
             self.update_actor(s, a, adv, old_log_prob)
